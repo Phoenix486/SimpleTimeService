@@ -26,9 +26,6 @@ jobs:
         client-id: ${{ secrets.AZURE_CLIENT_ID }}
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-    
-    - name: Set permissions
-      run: sudo chown -R $(whoami):$(whoami) .
 
     - name: Login to ACR
       run: |
@@ -41,10 +38,10 @@ jobs:
         echo "COMMIT_ID=$COMMIT_ID" >> $GITHUB_ENV
 
     - name: Build an image from Dockerfile
-      run: docker build -t acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }} .
+      run: sudo docker build -t acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }} .
     
     - name: Push Image to ACR
-      run: docker push acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }}
+      run: sudo docker push acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }}
     
     - name: Configure Git
       run: |
@@ -91,8 +88,8 @@ jobs:
 
     - name: Remove Docker image
       if: always()
-      run: docker rmi acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }} || true
+      run: sudo docker rmi acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }} || true
 
     - name: Clean workspace after job
       if: always()
-      run: rm -rf ./*
+      run: sudo rm -rf ./*
