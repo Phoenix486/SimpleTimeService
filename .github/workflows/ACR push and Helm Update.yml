@@ -38,10 +38,10 @@ jobs:
         echo "COMMIT_ID=$COMMIT_ID" >> $GITHUB_ENV
 
     - name: Build an image from Dockerfile
-      run: sudo docker build -t acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }} .
+      run: podman build -t acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }} .
     
     - name: Push Image to ACR
-      run: sudo docker push acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }}
+      run: podman push acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }}
     
     - name: Configure Git
       run: |
@@ -86,9 +86,9 @@ jobs:
           git commit -m "Update Helm chart version and values with commit ID" || echo "No changes to commit"
           git push https://${{secrets.USERNAME_GITHUB}}:${{secrets.PAT_GITHUB}}@github.com/ingenovishealth/simple-time-service.git ${{ github.ref }}
 
-    - name: Remove Docker image
+    - name: Remove Podman image
       if: always()
-      run: sudo docker rmi acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }} || true
+      run: podman rmi acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }} || true
 
     - name: Clean workspace after job
       if: always()

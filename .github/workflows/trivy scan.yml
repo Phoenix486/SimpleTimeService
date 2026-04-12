@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Build an image from Dockerfile
-        run: docker build -t simple-time-service .
+        run: podman build -t simple-time-service .
       
       - name: Run Trivy vulnerability scanner and output to JSON
         run: |
@@ -40,9 +40,9 @@ jobs:
           fi
         shell: /usr/bin/bash -e {0}
 
-      - name: Remove Docker image
+      - name: Remove Podman image
         if: always()
-        run: docker rmi simple-time-service:latest || true
+        run: podman rmi simple-time-service:latest || true
       
       - name: Clean workspace after job
         if: always()
