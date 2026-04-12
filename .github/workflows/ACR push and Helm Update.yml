@@ -38,7 +38,9 @@ jobs:
         echo "COMMIT_ID=$COMMIT_ID" >> $GITHUB_ENV
 
     - name: Build an image from Dockerfile
-      run: podman build -t acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }} .
+      run: |
+        cd ${{ github.workspace }}
+        podman build -t acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }} .
     
     - name: Push Image to ACR
       run: podman push acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }}

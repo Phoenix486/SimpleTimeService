@@ -16,10 +16,13 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Build an image from Dockerfile
-        run: podman build -t simple-time-service .
+        run: |
+          cd ${{ github.workspace }}
+          podman build -t simple-time-service:latest .
       
       - name: Run Trivy vulnerability scanner and output to JSON
         run: |
+          export PODMAN_SOCK=$XDG_RUNTIME_DIR/podman/podman.sock
           trivy image --ignorefile .trivyignore --ignore-unfixed --format json -o trivy-results.json simple-time-service:latest
       
       - name: Upload Trivy scan results as artifacts
