@@ -1,0 +1,49 @@
+﻿name: Trivy Workflow
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  Trivy-scan:
+    name: Run Trivy vulnerability scanner
+    runs-on: self-hosted
+    steps:
+      - name: Set permissions
+        run: sudo chown -R $(whoami):$(whoami) .
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build an image from Dockerfile
+        run: docker build -t simple-time-service .
+      
+      - name: Run Trivy vulnerability scanner and output to JSON
+        run: |
+          trivy image --ignorefile .trivyignore --ignore-unfixed --format json -o trivy-results.json simple-time-service:latest
+      
+      - name: Upload Trivy scan results as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+            name: trivy-scan-results
+            path: |
+              trivy-results.json
+              filtered-results.json        
+      - name: Check for HIGH, CRITICAL or MEDIUM vulnerabilities
+        run: |
+          jq '.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH" or .Severity == "CRITICAL" or .Severity == "MEDIUM")' trivy-results.json > filtered-results.json
+          if [ -s filtered-results.json ]; then
+            echo "HIGH, CRITICAL or MEDIUM vulnerabilities found!"
+            exit 1
+          else
+            echo "No HIGH, CRITICAL or MEDIUM vulnerabilities found."
+          fi
+        shell: /usr/bin/bash -e {0}
+
+      - name: Remove Docker image
+        if: always()
+        run: docker rmi simple-time-service:latest || true
+      
+      - name: Clean workspace after job
+        if: always()
+        run: rm -rf ./*
