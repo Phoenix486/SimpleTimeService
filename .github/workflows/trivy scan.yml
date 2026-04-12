@@ -14,7 +14,7 @@ jobs:
 
       - name: Build an image from Dockerfile
         run: |
-          docker build -t simple-time-service:latest .
+          sudo docker build -t simple-time-service:latest .
       
       - name: Run Trivy vulnerability scanner and output to JSON
         run: |
