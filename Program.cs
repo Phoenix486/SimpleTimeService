@@ -12,8 +12,6 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
-
 app.MapGet("/", (HttpContext context) =>
 {
     var response = new
