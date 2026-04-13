@@ -14,10 +14,28 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/", (HttpContext context) =>
 {
+    // Get the real visitor IP from X-Forwarded-For header (set by load balancer/proxy)
+    // Fall back to RemoteIpAddress if header not present
+    var ip = "Unknown";
+    
+    if (context.Request.Headers.TryGetValue("X-Forwarded-For", out var forwardedFor))
+    {
+        // X-Forwarded-For can contain multiple IPs, the first one is the original client
+        ip = forwardedFor.ToString().Split(',')[0].Trim();
+    }
+    else if (context.Request.Headers.TryGetValue("X-Real-IP", out var realIp))
+    {
+        ip = realIp.ToString();
+    }
+    else
+    {
+        ip = context.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+    }
+    
     var response = new
     {
         timestamp = DateTime.Now.ToString("O"),
-        ip = context.Connection.RemoteIpAddress?.ToString() ?? "Unknown"
+        ip = ip
     };
     return response;
 });
