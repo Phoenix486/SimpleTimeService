@@ -98,7 +98,7 @@ jobs:
         kubelogin convert-kubeconfig -l azurecli
 
     - name: Check namespace
-      run: kubectl get create namespace simple-time-service || true
+      run: kubectl create namespace simple-time-service || true
 
     - name: Upgrade Helm chart
       run: |
