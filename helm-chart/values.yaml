@@ -64,7 +64,7 @@ ingress:
     appgw.ingress.kubernetes.io/ssl-redirect: "true"
     appgw.ingress.kubernetes.io/appgw-ssl-certificate: "simple-time-service"
   hosts:
-    - host: simpletimeservice.com
+    - host: ""
       paths:
         - path: /
           pathType: ImplementationSpecific
