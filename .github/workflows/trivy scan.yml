@@ -9,12 +9,14 @@ jobs:
     name: Run Trivy vulnerability scanner
     runs-on: self-hosted
     steps:
+      - name: Set permissions
+        run: sudo chown -R $(whoami):$(whoami) .
+
       - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Build an image from Dockerfile
-        run: |
-          sudo docker build -t simple-time-service:latest .
+        run: docker build -t simple-time-service:latest .
       
       - name: Run Trivy vulnerability scanner and output to JSON
         run: |
