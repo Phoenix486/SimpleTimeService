@@ -92,6 +92,19 @@ jobs:
           git commit -m "Update Helm chart version and values with commit ID" || echo "No changes to commit"
           git push https://${{secrets.USERNAME_GITHUB}}:${{secrets.PAT_GITHUB}}@github.com/Phoenix486/SimpleTimeService.git ${{ github.ref }}
 
+    - name: Connect to AKS Cluster
+      run: |
+        az aks get-credentials --resource-group rg-avm-sts-prod-eastus --name aks-avm-sts-prod-eastus --overwrite-existing
+        kubelogin convert-kubeconfig -l azurecli
+
+    - name: Check namespace
+      run: kubectl get create namespace simple-time-service || true
+
+    - name: Upgrade Helm chart
+      run: |
+        helm upgrade simple-time-service ./helm-chart --install --namespace simple-time-service --set image.tag=${{ env.COMMIT_ID }} --wait
+        kubectl get all -n simple-time-service
+
     - name: Remove Docker image
       if: always()
       run: docker rmi acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }} || true
