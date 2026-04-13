@@ -13,6 +13,8 @@ jobs:
   Push-Image-and-update-helm:
     if: github.event.pull_request.merged == true
     runs-on: self-hosted
+    environment:
+      name: 'Production'
     steps:
     - name: Set permissions
       run: sudo chown -R $(whoami):$(whoami) .
