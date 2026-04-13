@@ -41,7 +41,7 @@ This service is designed to:
 
 ### 1. Clone and Navigate
 ```bash
-git clone https://github.com/YOUR-ORG/SimpleTimeService.git
+git clone https://github.com/Phoenix486/SimpleTimeService.git
 cd SimpleTimeService
 ```
 

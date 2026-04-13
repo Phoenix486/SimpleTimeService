@@ -1,0 +1,100 @@
+﻿name: ACR Push and Helm Update
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [closed]
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  Push-Image-and-update-helm:
+    if: github.event.pull_request.merged == true
+    runs-on: self-hosted
+    steps:
+    - name: Set permissions
+      run: sudo chown -R $(whoami):$(whoami) .
+
+    - name: Checkout code
+      uses: actions/checkout@v6.0.2
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.PAT_GITHUB }}
+
+    - name: Az CLI Login
+      uses: azure/login@v2.0.0
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Login to ACR
+      run: |
+        az acr login --name acravmstsprodeastus
+  
+    - name: Get latest commit ID
+      id: get_commit_id
+      run: |
+        COMMIT_ID=$(git rev-parse --short HEAD)
+        echo "COMMIT_ID=$COMMIT_ID" >> $GITHUB_ENV
+
+    - name: Build an image from Dockerfile
+      run: |
+        cd ${{ github.workspace }}
+        docker build -t acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }} .
+    
+    - name: Push Image to ACR
+      run: docker push acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }}
+    
+    - name: Configure Git
+      run: |
+        git config --global user.email ${{ secrets.USERNAME_GITHUB }}
+        git config --global user.name ${{ secrets.USERNAME_EMAIL }}
+    
+    - name: Pull latest changes
+      run: git pull origin ${{ github.ref_name }}
+
+    - name: Increment Helm chart version
+      run: |
+        CHART_FILE="./helm-chart/Chart.yaml"
+        VERSION=$(grep '^version:' $CHART_FILE | awk '{print $2}')
+        IFS='.' read -r -a VERSION_PARTS <<< "$VERSION"
+        MAJOR=${VERSION_PARTS[0]}
+        MINOR=${VERSION_PARTS[1]}
+        PATCH=${VERSION_PARTS[2]}
+        if [ "$PATCH" -lt 9 ]; then
+          PATCH=$((PATCH + 1))
+        else
+          PATCH=0
+          if [ "$MINOR" -lt 9 ]; then
+            MINOR=$((MINOR + 1))
+          else
+            MINOR=0
+            MAJOR=$((MAJOR + 1))
+          fi
+        fi
+        NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+        sed -i "s/^version:.*/version: $NEW_VERSION/" $CHART_FILE
+        echo "Updated version from $VERSION to $NEW_VERSION"
+
+    - name: Update Helm chart values
+      run: |
+          sed -i 's/tag:.*/tag: "${{ env.COMMIT_ID }}"/' ./helm-chart/values.yaml
+  
+    - name: Commit changes to chart and values yaml
+      env:
+          PAT: ${{ secrets.PAT_GITHUB }}
+      run: |
+          git add ./helm-chart/Chart.yaml ./helm-chart/values.yaml
+          git commit -m "Update Helm chart version and values with commit ID" || echo "No changes to commit"
+          git push https://${{secrets.USERNAME_GITHUB}}:${{secrets.PAT_GITHUB}}@github.com/ingenovishealth/simple-time-service.git ${{ github.ref }}
+
+    - name: Remove Docker image
+      if: always()
+      run: docker rmi acravmstsprodeastus.azurecr.io/simple-time-service:${{ env.COMMIT_ID }} || true
+
+    - name: Clean workspace after job
+      if: always()
+      run: sudo rm -rf ./*
