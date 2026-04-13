@@ -7,7 +7,7 @@ replicaCount: 3
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: acrazavmprodeastus.azurecr.io/simpletimeservice
+  repository: acrazavmprodeastus.azurecr.io/simple-time-service
   # This sets the pull policy for images.
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
@@ -17,7 +17,7 @@ image:
 imagePullSecrets: []
 # This is to override the chart name.
 nameOverride: ""
-fullnameOverride: "simpletimeservice"
+fullnameOverride: "simple-time-service"
 
 # This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:
@@ -62,7 +62,7 @@ ingress:
   className: "azure-application-gateway"
   annotations:
     appgw.ingress.kubernetes.io/ssl-redirect: "true"
-    appgw.ingress.kubernetes.io/appgw-ssl-certificate: "wildcard-smpletimeservice"
+    appgw.ingress.kubernetes.io/appgw-ssl-certificate: "simple-time-service"
   hosts:
     - host: simpletimeservice.com
       paths:
