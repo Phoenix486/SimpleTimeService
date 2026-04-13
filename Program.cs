@@ -22,6 +22,11 @@ app.MapGet("/", (HttpContext context) =>
     {
         // X-Forwarded-For can contain multiple IPs, the first one is the original client
         ip = forwardedFor.ToString().Split(',')[0].Trim();
+        // Remove port if included (e.g., "192.168.1.1:8080" -> "192.168.1.1")
+        if (ip.Contains(':'))
+        {
+            ip = ip.Split(':')[0];
+        }
     }
     else if (context.Request.Headers.TryGetValue("X-Real-IP", out var realIp))
     {
