@@ -18,10 +18,10 @@ RUN addgroup -g 1001 appgroup && \
 
 COPY --from=build --chown=appuser:appgroup /App/out .
 
-# Configure app to listen on port 80
-ENV ASPNETCORE_URLS=http://+:80
+# Configure app to listen on port 8080
+ENV ASPNETCORE_URLS=http://+:8080
 
 USER appuser
 
-EXPOSE 80
+EXPOSE 8080
 ENTRYPOINT ["dotnet", "SimpleTimeService.dll"]
